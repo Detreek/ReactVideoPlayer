@@ -1,0 +1,47 @@
+.top-div{
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+.sidebar {
+    transition: all 0.25s ;
+    z-index: 1;
+    position: absolute;
+    right: -12%;
+    
+    display: flex;
+
+    float: right;
+    flex-direction: column;
+    background-color: darkslateblue;
+    height: 100vh;
+}
+.sidebar.active {
+    display: flex;
+    z-index: 3;
+    transition: all 0.25s;
+    right: 0;
+    
+}
+.button.invisible{
+    display: none;
+
+}
+.button{
+    display: flex;
+    float: right;
+
+}
+.bar-button.invisible{
+    display: none;
+}
+.bar-button{
+    z-index: 2;
+    position: absolute;
+    left: 0;
+    display: flex;
+    background-color: transparent;
+    width: 100vw;
+    min-height: 100vh;
+}
