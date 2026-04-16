@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type Key } from "react"
 import Hls from "hls.js"
 import type { Video } from "./DTO/Video";
 import { getVideoData } from "./logic";
@@ -7,7 +7,8 @@ function videoPlayer() {
     const [hlsContext, setHls] = useState<Hls>();
     const [videoData, setVideoData] = useState<Video>();
     const [VideoVolume, setVideoVolume] = useState<number>(50);
-    const [videoTime, setVideoTime] = useState<number>(0)
+    const [VideoTime, setVideoTime] = useState<number>(0)
+    const [VideoState, setVideoState] = useState<boolean>(true)
     const [VideoDuration, setVideoDuration] = useState<string>("-:--"); //string type for HTML tag
 
     const videoContext = useRef<HTMLVideoElement>(null)
@@ -62,31 +63,82 @@ function videoPlayer() {
         }
         const strMaxDuration = videoContext.current.duration
         setVideoDuration(strMaxDuration.toString())
-        PlayVideo
+        // PlayVideo()
 
 
     }, [])
+    useEffect((() => {
+
+        document.addEventListener("keydown", KeyDownHandler)
+        return () => (document.removeEventListener("keydown", KeyDownHandler))
+
+    }), [])
     useEffect((() => {
         VolumeChange()
     }), [VideoVolume])
     useEffect((() => {
         RewindVideo()
-    }), [videoTime])
-    const PlayVideo = () => {
+    }), [VideoTime])
+    useEffect((() => {
+        console.log("state UseEffect")
+        if (VideoState) {
+            console.log("play")
+            PlayVideo()
+        }
+        else {
 
+            PauseVideo()
+        }
+    }), [VideoState])
+    const KeyDownHandler = (e: globalThis.KeyboardEvent) => {
+        console.log("прошел в хендлер")
+        if (e.repeat) {
+            return
+        }
+        if (e.key == ' ') {
+
+            setVideoState(!VideoState)
+        }
+        if (e.key == 'ArrowLeft') {
+
+            FiveSecBefore()
+        }
+        if (e.key == 'ArrowRight') {
+
+            FiveSecForward()
+        }
+
+    }
+    const FiveSecBefore = () => {
+        if (!videoContext.current) {
+            return
+        }
+        videoContext.current.currentTime += VideoTime - 5
+
+    }
+    const FiveSecForward = () => {
+
+        if (!videoContext.current) {
+            return
+        }
+        videoContext.current.currentTime += VideoTime + 5
+    }
+    const PlayVideo = () => {
+        console.log("Playvideo")
         videoContext.current?.play()
+        setVideoState(true)
     }
     const PauseVideo = () => {
         hlsContext!.pauseBuffering()
         videoContext.current?.pause()
-
+        setVideoState(false)
     }
     const RewindVideo = () => {
         if (!videoContext.current) {
             return
         }
 
-        videoContext.current.currentTime = videoTime
+        videoContext.current.currentTime = VideoTime
 
 
     }
@@ -99,11 +151,12 @@ function videoPlayer() {
 
 
     return (
+
         <div className="video-player-box">
             <div className="pop-up-window">
 
                 <input type="range" min={0} max={VideoDuration} className="Video-length"
-                    value={videoTime} onChange={(e) => { setVideoTime(parseInt(e.target.value)) }}></input>
+                    value={VideoTime} onChange={(e) => { setVideoTime(parseInt(e.target.value)) }}></input>
                 <input type="range" min={0} max={10} className="Volume"
                     value={VideoVolume} onChange={(e) => { setVideoVolume(parseInt(e.target.value)) }}></input>
             </div>
