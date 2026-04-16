@@ -7,8 +7,8 @@ function videoPlayer() {
     const [hlsContext, setHls] = useState<Hls>();
     const [videoData, setVideoData] = useState<Video>();
     const [VideoVolume, setVideoVolume] = useState<number>(50);
-    const [videoTime, setVideoTime] = useState<number>()
-    const [videoLoadedState, setVideoLoadedState] = useState<boolean>(false);
+    const [videoTime, setVideoTime] = useState<number>(0)
+    const [VideoDuration, setVideoDuration] = useState<string>("-:--"); //string type for HTML tag
 
     const videoContext = useRef<HTMLVideoElement>(null)
     function Createhls(m8u3Url?: string): void {
@@ -55,16 +55,23 @@ function videoPlayer() {
     }
 
     useEffect(() => {
-        debugger
+
         LoadVideo()
-        setVideoLoadedState(true)
+        if (!videoContext.current) {
+            return
+        }
+        const strMaxDuration = videoContext.current.duration
+        setVideoDuration(strMaxDuration.toString())
         PlayVideo
 
 
     }, [])
     useEffect((() => {
-        VolumeChange
+        VolumeChange()
     }), [VideoVolume])
+    useEffect((() => {
+        RewindVideo()
+    }), [videoTime])
     const PlayVideo = () => {
 
         videoContext.current?.play()
@@ -72,6 +79,15 @@ function videoPlayer() {
     const PauseVideo = () => {
         hlsContext!.pauseBuffering()
         videoContext.current?.pause()
+
+    }
+    const RewindVideo = () => {
+        if (!videoContext.current) {
+            return
+        }
+
+        videoContext.current.currentTime = videoTime
+
 
     }
     const VolumeChange = () => {
@@ -86,14 +102,14 @@ function videoPlayer() {
         <div className="video-player-box">
             <div className="pop-up-window">
 
-                <input type="range" min={0} max={videoData?.timeDuration} className="Video-length"
-                    value={videoTime} onChange={(e) => { }}></input>
+                <input type="range" min={0} max={VideoDuration} className="Video-length"
+                    value={videoTime} onChange={(e) => { setVideoTime(parseInt(e.target.value)) }}></input>
                 <input type="range" min={0} max={10} className="Volume"
-                    value={VideoVolume} onChange={(e) => { setVideoVolume(parseInt(e.target.value)), VolumeChange() }}></input>
+                    value={VideoVolume} onChange={(e) => { setVideoVolume(parseInt(e.target.value)) }}></input>
             </div>
             <video ref={videoContext} className="video"></video>
-            <button onClick={PlayVideo}>FIdhisfijiewsjipfewijpfwjpiefpjioewjipfwjpefjpoiwejfjpweojpfojp</button>
-            <button onClick={PauseVideo}>STOOOOOOOP</button>
+            <button onClick={PlayVideo}>play</button>
+            <button onClick={PauseVideo}>STOP</button>
         </div>)
 }
 
