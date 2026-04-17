@@ -2,11 +2,13 @@ import { useEffect, useRef, useState, type Key } from "react"
 import Hls from "hls.js"
 import type { Video } from "./DTO/Video";
 import { getVideoData } from "./logic";
+import { useHotkeys } from 'react-hotkeys-hook';
 function videoPlayer() {
 
-    const [hlsContext, setHls] = useState<Hls>();
+    const [hlsContext, setHls] = useState<Hls>(); // TODO: useState -> useRef
     const [videoData, setVideoData] = useState<Video>();
     const [VideoVolume, setVideoVolume] = useState<number>(50);
+    const [VideoVolumeState, setVideoVolumeState] = useState<boolean>(true)
     const [VideoTime, setVideoTime] = useState<number>(0)
     const [VideoState, setVideoState] = useState<boolean>(true)
     const [VideoDuration, setVideoDuration] = useState<string>("-:--"); //string type for HTML tag
@@ -63,16 +65,36 @@ function videoPlayer() {
         }
         const strMaxDuration = videoContext.current.duration
         setVideoDuration(strMaxDuration.toString())
-        // PlayVideo()
+
 
 
     }, [])
-    useEffect((() => {
+    useHotkeys('space', (event) => {
+        event.preventDefault()
+        setVideoState(!VideoState)
+    })
+    useHotkeys('ArrowLeft', (event) => {
+        event.preventDefault()
+        FiveSecBefore()
 
-        document.addEventListener("keydown", KeyDownHandler)
-        return () => (document.removeEventListener("keydown", KeyDownHandler))
+    })
+    useHotkeys('ArrowRight', (event) => {
+        event.preventDefault()
+        FiveSecForward()
+    })
+    useHotkeys('ArrowUp', (event) => {
+        event.preventDefault()
+        VolumeLouder()
+    })
+    useHotkeys('ArrowDown', (event) => {
+        event.preventDefault()
+        VolumeQuiet()
+    })
+    useHotkeys('m', (event) => {
+        event.preventDefault()
+        MuteVideo()
+    })
 
-    }), [])
     useEffect((() => {
         VolumeChange()
     }), [VideoVolume])
@@ -90,30 +112,12 @@ function videoPlayer() {
             PauseVideo()
         }
     }), [VideoState])
-    const KeyDownHandler = (e: globalThis.KeyboardEvent) => {
-        console.log("прошел в хендлер")
-        if (e.repeat) {
-            return
-        }
-        if (e.key == ' ') {
-
-            setVideoState(!VideoState)
-        }
-        if (e.key == 'ArrowLeft') {
-
-            FiveSecBefore()
-        }
-        if (e.key == 'ArrowRight') {
-
-            FiveSecForward()
-        }
-
-    }
     const FiveSecBefore = () => {
         if (!videoContext.current) {
             return
         }
         videoContext.current.currentTime += VideoTime - 5
+        setVideoTime(VideoTime - 5)
 
     }
     const FiveSecForward = () => {
@@ -122,6 +126,7 @@ function videoPlayer() {
             return
         }
         videoContext.current.currentTime += VideoTime + 5
+        setVideoTime(VideoTime + 5)
     }
     const PlayVideo = () => {
         console.log("Playvideo")
@@ -129,9 +134,37 @@ function videoPlayer() {
         setVideoState(true)
     }
     const PauseVideo = () => {
-        hlsContext!.pauseBuffering()
+
         videoContext.current?.pause()
         setVideoState(false)
+    }
+    const MuteVideo = () => {
+        if (videoContext.current === null) {
+            return
+        }
+        if (VideoVolumeState) {
+            setVideoVolume(videoContext.current.volume)
+            videoContext.current.volume = 0
+            setVideoVolumeState(false)
+            return
+        }
+        // TODO: VideoVolume have visible problem on range button
+        videoContext.current.volume = VideoVolume
+        setVideoVolumeState(true)
+    }
+    const VolumeLouder = () => {
+        if (videoContext.current === null) {
+            return
+        }
+        videoContext.current.volume += 0.05
+        setVideoVolume(VideoVolume + 5)
+    }
+    const VolumeQuiet = () => {
+        if (videoContext.current === null) {
+            return
+        }
+        videoContext.current.volume -= 0.05
+        setVideoVolume(VideoVolume - 5)
     }
     const RewindVideo = () => {
         if (!videoContext.current) {
@@ -157,12 +190,12 @@ function videoPlayer() {
 
                 <input type="range" min={0} max={VideoDuration} className="Video-length"
                     value={VideoTime} onChange={(e) => { setVideoTime(parseInt(e.target.value)) }}></input>
-                <input type="range" min={0} max={10} className="Volume"
+                <input type="range" min={0} max={100} className="Volume"
                     value={VideoVolume} onChange={(e) => { setVideoVolume(parseInt(e.target.value)) }}></input>
             </div>
             <video ref={videoContext} className="video"></video>
-            <button onClick={PlayVideo}>play</button>
-            <button onClick={PauseVideo}>STOP</button>
+            {/* <button onClick={PlayVideo}>play</button>
+            <button onClick={PauseVideo}>STOP</button> */}
         </div>)
 }
 
