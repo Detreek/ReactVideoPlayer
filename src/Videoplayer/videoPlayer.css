@@ -1,4 +1,149 @@
-.video {
-  width: 1280px;
-  height: 720px;
+/* Центрируем плеер на странице */
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #111;
+}
+
+/* Относительный контейнер для абсолютного позиционирования панели */
+.video-player-box {
+  position: relative;
+  display: inline-block;
+  max-width: 90vw;
+  background: #000;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* Контейнер видео */
+.video-not-fullscrean video {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: black;
+  border-radius: 12px;
+  pointer-events: auto;
+}
+
+/* Панель управления — ВНИЗУ, поверх видео */
+.pop-up-window {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  border-radius: 0 0 12px 12px; /* скругление только снизу */
+  z-index: 10;
+  flex-wrap: wrap;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+/* При наведении на плеер панель становится ярче (опционально) */
+.video-player-box:hover .pop-up-window {
+  opacity: 1;
+}
+
+/* Стили для ползунков (чтобы не сливались с фоном) */
+input[type="range"] {
+  -webkit-appearance: none;
+  background: transparent;
+}
+
+/* Общие настройки трека */
+.video-length,
+.Volume {
+  height: 5px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.3); /* светлый полупрозрачный трек */
+}
+
+/* Ползунок времени — шире */
+.video-length {
+  flex: 3;
+  min-width: 150px;
+}
+/* Ползунок громкости */
+.Volume {
+  flex: 1;
+  min-width: 80px;
+}
+
+/* Бегунки */
+.video-length::-webkit-slider-thumb,
+.Volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #f44336; /* красный для времени */
+  cursor: pointer;
+  box-shadow: 0 0 2px white;
+}
+.Volume::-webkit-slider-thumb {
+  background: #4caf50; /* зелёный для громкости */
+}
+
+/* Трек (runway) для Webkit */
+.video-length::-webkit-slider-runnable-track,
+.Volume::-webkit-slider-runnable-track {
+  height: 5px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Для Firefox */
+.video-length::-moz-range-track,
+.Volume::-moz-range-track {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.3);
+}
+.video-length::-moz-range-thumb,
+.Volume::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 50%;
+  background: #f44336;
+}
+.Volume::-moz-range-thumb {
+  background: #4caf50;
+}
+
+/* Кнопки */
+.pop-up-window button {
+  background: #2c2c2c;
+  border: none;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.1s;
+}
+.pop-up-window button:hover {
+  background: #f44336;
+}
+
+/* Адаптивность */
+@media (max-width: 600px) {
+  .pop-up-window {
+    gap: 6px;
+    padding: 8px 10px;
+  }
+  .video-length {
+    min-width: 100px;
+  }
+  .pop-up-window button {
+    padding: 4px 10px;
+  }
 }
