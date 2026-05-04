@@ -4,6 +4,8 @@ import type { Video } from "./DTO/Video";
 import { getVideoData } from "./logic";
 import { useHotkeys } from 'react-hotkeys-hook';
 import './videoPlayer.css'
+import RangeButton from "./componentsVideoPlayer/RangeButton";
+import VolumeRangeButton from "./componentsVideoPlayer/VolumeRangeButton";
 function videoPlayer() {
 
     const hlsContext = useRef<Hls>(null);
@@ -246,14 +248,8 @@ function videoPlayer() {
             ref={fullscreenContext}>
             <div className="pop-up-window">
 
-                <input type="range" min={0} max={VideoDuration} className="video-length"
-                    value={VideoTime} onChange={(e) => {
-                        const newTime = parseInt(e.target.value)
-                        setVideoTime(newTime);
-                        if (videoContext.current) videoContext.current.currentTime = newTime;
-                    }}></input>
-                <input type="range" min={0} max={100} className="Volume"
-                    value={VideoVolume} onChange={(e) => { setVideoVolume(parseInt(e.target.value)) }}></input>
+                <RangeButton videoContext={videoContext.current} videoDuration={VideoDuration} videoTime={VideoTime} setVideoTime={setVideoTime}></RangeButton>
+                <VolumeRangeButton setVideoVolume={setVideoVolume} videoVolume={VideoVolume}></VolumeRangeButton>
                 <button onClick={PlayVideo}>play</button>
                 <button onClick={PauseVideo}>STOP</button>
                 <button onClick={toggleFullscreen}
