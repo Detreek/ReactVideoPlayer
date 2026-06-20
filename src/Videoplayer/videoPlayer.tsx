@@ -1,26 +1,28 @@
 import { useEffect, useRef, useState } from "react"
 import Hls from "hls.js"
-import type { Video } from "./DTO/Video";
+
+import useVolume from "./Hooks/useVolume";
 import { getVideoData } from "./logic";
 import { useHotkeys } from 'react-hotkeys-hook';
 import './videoPlayer.css'
 import RangeButton from "./componentsVideoPlayer/RangeButton";
 import VolumeRangeButton from "./componentsVideoPlayer/VolumeRangeButton";
+import useTimeline from "./Hooks/useTimeline";
 function videoPlayer() {
+    const videoContext = useRef<HTMLVideoElement>(null)
 
-    const hlsContext = useRef<Hls>(null);
-    const [videoData, setVideoData] = useState<Video | undefined>();
-    const [VideoVolume, setVideoVolume] = useState<number>(50);
-    const [VideoVolumeState, setVideoVolumeState] = useState<boolean>(true)
-    const [VideoTime, setVideoTime] = useState<number>(0)
-    const [VideoState, setVideoState] = useState<boolean>(false)
-    const [VideoDuration, setVideoDuration] = useState<number>(0); //string type for HTML tag
+
+    const { duration, timestamp, setTimestamp, setMetadataLoaded, playState, setPlayState } = useTimeline(videoContext)
+
+    const { volume, setVolume, muteState, setMuteState } = useVolume(videoContext)
+
+
     const [IsFullScreenState, setFullScreenState] = useState<boolean>(false) // isFullscreen 
     const fullscreenContext = useRef<HTMLDivElement | null>(null)
 
 
-    const videoContext = useRef<HTMLVideoElement>(null)
-    function Createhls(m3u8Url?: string): void {
+
+    function Createhls(m3u8Url?: string): Hls {
         if (m3u8Url === null || m3u8Url === undefined) {
             throw "no m8u3Url"
 
@@ -48,66 +50,55 @@ function videoPlayer() {
             hls.currentLevel = highestQualityIndex;
 
             console.log('manifest loaded, found ' + data.levels.length + ' quality level',);
-            const StopTime = videoData?.timeStop ?? 0
+
             if (videoContext.current === null) {
                 throw "no video element"
 
             }
 
-            videoContext.current.currentTime = StopTime
+
 
         });
 
         hls.loadSource(m3u8Url);
 
 
-        hlsContext.current = hls
-    }
-    async function LoadVideo(): Promise<void> {
+        return hls
+    } // dont touch anything !!!!
+    async function LoadVideo(): Promise<Hls | null> {
 
         const data = await getVideoData()
 
         if (!videoContext.current) {
-            return
+            return (null)
         }
         if (data === undefined) {
-            return
-        }
-        setVideoData(data)
-
-        if ((data).timeStop !== 0) {
-            setVideoTime(data.timeStop) // last session (maybe need to use localstorage - this is the best chs)
+            return (null)
         }
 
-        Createhls(data.m8u3Url)
 
 
-    }
+
+        return Createhls(data.m8u3Url)
+
+
+    } // and this also dont touch
     // useEffect part
 
     useEffect(() => {
+        let hls: Hls | null
+        (async () => hls = await LoadVideo())()
 
-        LoadVideo()
-        if (!videoContext.current) {
-            return
-        }
 
-        return () => hlsContext.current?.destroy()
+
+        return () => hls?.destroy()
 
 
     }, [])
 
-
-
     useEffect((() => {
-        VolumeChange()
-    }), [VideoVolume])
-    // useEffect((() => {
-    //     RewindVideo()
-    // }), [VideoTime])
-    useEffect((() => {
-        console.log("state UseEffect")
-        if (VideoState) {
+
+        if (playState) {
             console.log("play")
             PlayVideo()
         }
@@ -115,12 +106,12 @@ function videoPlayer() {
 
             PauseVideo()
         }
-    }), [VideoState])
-
+    }), [playState])
     // useEffect part is over
+
     useHotkeys('space', (event) => {
-        event.preventDefault()
-        setVideoState(!VideoState)
+        event.preventDefault();
+        (!playState)
     })
     useHotkeys('ArrowLeft', (event) => {
         event.preventDefault()
@@ -142,14 +133,17 @@ function videoPlayer() {
     useHotkeys('m', (event) => {
         event.preventDefault()
         MuteVideo()
-    })
+    }) // hotkeys mb add something else
+
+
+
     const toggleFullscreen = () => {
         if (!videoContext.current) {
             return
         }
         if (!fullscreenContext.current) {
             return
-        }
+        } // need
         if (IsFullScreenState) {
             fullscreenContext.current.requestFullscreen()
             setFullScreenState(false)
@@ -161,8 +155,8 @@ function videoPlayer() {
         if (!videoContext.current) {
             return
         }
-        videoContext.current.currentTime += 5
-        setVideoTime((VideoTime) => VideoTime - 5)
+
+        setTimestamp((timestamp) => timestamp - 5)
 
     }
     const FiveSecForward = () => {
@@ -170,76 +164,53 @@ function videoPlayer() {
         if (!videoContext.current) {
             return
         }
-        videoContext.current.currentTime += 5
-        setVideoTime((VideoTime) => VideoTime + 5)
+
+        setTimestamp((timestamp) => timestamp + 5)
     }
     const PlayVideo = () => {
-        console.log("Playvideo")
-        videoContext.current?.play()
-        setVideoState(true)
+
+        setPlayState(true)
+
     }
     const PauseVideo = () => {
 
-        videoContext.current?.pause()
-        setVideoState(false)
+        setPlayState(false)
     }
     const MuteVideo = () => {
-        if (videoContext.current === null) {
-            return
-        }
-        if (VideoVolumeState) {
-            setVideoVolume(videoContext.current.volume)
-            videoContext.current.volume = 0
-            setVideoVolumeState(false)
+
+        if (muteState) {
+
+
+            setMuteState(false)
             return
         }
         // TODO: VideoVolume have visible problem on range button
-        videoContext.current.volume = VideoVolume
-        setVideoVolumeState(true)
+
+        setMuteState(true)
     }
     const VolumeLouder = () => {
-        if (videoContext.current === null) {
-            return
-        }
-        if (videoContext.current.volume > 0.95) {
-            videoContext.current.volume = 1
+        if (volume > 0.95) {
+            setVolume(1)
 
-            setVideoVolume(videoContext.current.volume)
+
             return
 
         }
-        videoContext.current.volume += 0.05
-        setVideoVolume(VideoVolume + 5)
+        setVolume(volume + 0.05)
+
     }
     const VolumeQuiet = () => {
-        if (videoContext.current === null) {
-            return
-        }
-        if (videoContext.current.volume <= 0.05) {
-            videoContext.current.volume = 0
+        if (volume <= 0.05) {
+            setVolume(0)
 
-            setVideoVolume(videoContext.current.volume)
+
             return
 
         }
-        videoContext.current.volume -= 0.05
-        setVideoVolume(VideoVolume - 5)
-    }
-    const RewindVideo = () => {
-        if (!videoContext.current) {
-            return
-        }
-
-        videoContext.current.currentTime = VideoTime
-
+        setVolume(volume - 0.05)
 
     }
-    const VolumeChange = () => {
-        if (videoContext.current === null) {
-            return
-        }
-        videoContext.current.volume = VideoVolume / 100
-    }
+
 
 
     return (
@@ -248,8 +219,8 @@ function videoPlayer() {
             ref={fullscreenContext}>
             <div className="pop-up-window">
 
-                <RangeButton videoContext={videoContext.current} videoDuration={VideoDuration} videoTime={VideoTime} setVideoTime={setVideoTime}></RangeButton>
-                <VolumeRangeButton setVideoVolume={setVideoVolume} videoVolume={VideoVolume}></VolumeRangeButton>
+                <RangeButton videoDuration={duration} videoTime={timestamp} setVideoTime={setTimestamp}></RangeButton>
+                <VolumeRangeButton setVideoVolume={setVolume} videoVolume={volume}></VolumeRangeButton>
                 <button onClick={PlayVideo}>play</button>
                 <button onClick={PauseVideo}>STOP</button>
                 <button onClick={toggleFullscreen}
@@ -257,16 +228,16 @@ function videoPlayer() {
             </div>
             <div className="video-not-fullscrean">
                 <video ref={videoContext} className="video" onLoadedMetadata={() => {
-                    if (videoContext.current) {
-                        setVideoDuration(videoContext.current.duration)
-                    }
+                    setMetadataLoaded(true)
 
                 }}
-                    onClick={() => VideoState ? PauseVideo() : PlayVideo()}
-                    onTimeUpdate={() => {
-                        if (videoContext.current) {
-                            setVideoTime(videoContext.current.currentTime);
-                        }
+                    onClick={() => playState ? PauseVideo() : PlayVideo()}
+                    onTimeUpdate={(e) => {
+                        // debugger
+
+                        setTimestamp(e.currentTarget.currentTime); // TODO два обновлятора убивают друг друга рекурсия причина кала, причина стартеров типо.
+                        // злая фигня пошло оно блин
+
                     }}></video>
             </div>
 
