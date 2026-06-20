@@ -3,7 +3,8 @@ type VolumeRangeButtonProps = {
     setVideoVolume: (n: number) => void
 }
 function VolumeRangeButton(props: VolumeRangeButtonProps) {
-    return (<input type="range" min={0} max={100} className="Volume"
-        value={props.videoVolume} onChange={(e) => { props.setVideoVolume(parseInt(e.target.value)) }}></input>)
+    const MAX_VOLUME = 100;
+    return (<input type="range" min={0} max={MAX_VOLUME} className="Volume"
+        value={props.videoVolume * MAX_VOLUME} onChange={(e) => { props.setVideoVolume(parseInt(e.target.value) / MAX_VOLUME) }}></input>)
 }
 export default VolumeRangeButton

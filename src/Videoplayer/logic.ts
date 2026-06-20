@@ -7,9 +7,9 @@ export async function getVideoData() : Promise<Video>{
     // return(videoData.data)
     return({id: 1,
     m8u3Url:"http://content.jwplatform.com/manifests/vM7nH0Kl.m3u8",
-    timeDuration : 3000, // sec
+    
     Name : "hdis",
-    timeStop : 0})
+    timeStop : 0}) //
     
 }
 export async function postVideo(UserId : number) {
