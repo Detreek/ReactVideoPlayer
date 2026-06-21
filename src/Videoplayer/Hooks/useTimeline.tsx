@@ -1,4 +1,4 @@
-import React, { type Ref } from 'react'
+import React from 'react'
 import { useState, useEffect } from 'react'
 
 export default function useTimeline(videoContext: React.RefObject<HTMLVideoElement | null>) {
@@ -7,6 +7,7 @@ export default function useTimeline(videoContext: React.RefObject<HTMLVideoEleme
     const [timestamp, setTimestamp] = useState<number>(0) // sec
     const [metadataLoaded, setMetadataLoaded] = useState<boolean>(false)
     const [playState, setPlayState] = useState<boolean>(true) //isPlaying?????????????
+    const [realTimestamp, setRealTimestamp] = useState<number>(0)
     useEffect(() => {
         // debugger
         if (!videoContext.current) {
@@ -33,8 +34,13 @@ export default function useTimeline(videoContext: React.RefObject<HTMLVideoEleme
             return
         }
         videoContext.current.currentTime = timestamp
-
+        setRealTimestamp(timestamp)
+        console.log("UseEffect", timestamp, "Timestamp")
         return
     }, [timestamp])
-    return { duration, timestamp, setTimestamp, setMetadataLoaded, playState, setPlayState }
+
+    const setTimestampImidiate = (timestamp: number) => {
+        return setRealTimestamp(timestamp)
+    }
+    return { duration, timestamp: realTimestamp, setTimestamp, setMetadataLoaded, playState, setPlayState, setTimestampImidiate }
 }

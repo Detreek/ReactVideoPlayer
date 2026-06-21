@@ -1,24 +1,25 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import Hls from "hls.js"
 
 import useVolume from "./Hooks/useVolume";
 import { getVideoData } from "./logic";
 import { useHotkeys } from 'react-hotkeys-hook';
 import './videoPlayer.css'
-import RangeButton from "./componentsVideoPlayer/RangeButton";
+import TimeLine from "./componentsVideoPlayer/Timeline";
 import VolumeRangeButton from "./componentsVideoPlayer/VolumeRangeButton";
 import useTimeline from "./Hooks/useTimeline";
+import useFullscreen from "./Hooks/useFullscreen";
 function videoPlayer() {
     const videoContext = useRef<HTMLVideoElement>(null)
+    const fullscreenContext = useRef<HTMLDivElement | null>(null)
 
-
-    const { duration, timestamp, setTimestamp, setMetadataLoaded, playState, setPlayState } = useTimeline(videoContext)
+    const { duration, timestamp, setTimestamp, setMetadataLoaded, playState, setPlayState, setTimestampImidiate } = useTimeline(videoContext)
 
     const { volume, setVolume, muteState, setMuteState } = useVolume(videoContext)
+    const { fullScreenState, setFullScreenState } = useFullscreen(fullscreenContext)
 
 
-    const [IsFullScreenState, setFullScreenState] = useState<boolean>(false) // isFullscreen 
-    const fullscreenContext = useRef<HTMLDivElement | null>(null)
+
 
 
 
@@ -45,7 +46,7 @@ function videoPlayer() {
 
         });
 
-        hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+        hls.on(Hls.Events.MANIFEST_PARSED, function (_event, data) {
             const highestQualityIndex = data.levels.length - 1;
             hls.currentLevel = highestQualityIndex;
 
@@ -137,20 +138,7 @@ function videoPlayer() {
 
 
 
-    const toggleFullscreen = () => {
-        if (!videoContext.current) {
-            return
-        }
-        if (!fullscreenContext.current) {
-            return
-        } // need
-        if (IsFullScreenState) {
-            fullscreenContext.current.requestFullscreen()
-            setFullScreenState(false)
-        }
-        document.exitFullscreen()
-        setFullScreenState(true)
-    }
+
     const FiveSecBefore = () => {
         if (!videoContext.current) {
             return
@@ -215,15 +203,15 @@ function videoPlayer() {
 
     return (
 
-        <div className={`video-player-box${IsFullScreenState ? 'fullscreen-active' : ''}`}
+        <div className={`video-player-box${fullScreenState ? 'fullscreen-active' : ''}`}
             ref={fullscreenContext}>
             <div className="pop-up-window">
 
-                <RangeButton videoDuration={duration} videoTime={timestamp} setVideoTime={setTimestamp}></RangeButton>
+                <TimeLine videoDuration={duration} videoTime={timestamp} setVideoTime={setTimestamp}></TimeLine>
                 <VolumeRangeButton setVideoVolume={setVolume} videoVolume={volume}></VolumeRangeButton>
                 <button onClick={PlayVideo}>play</button>
                 <button onClick={PauseVideo}>STOP</button>
-                <button onClick={toggleFullscreen}
+                <button onClick={() => { setFullScreenState(V => !V) }}
                     className="fullScreen-button"></button>
             </div>
             <div className="video-not-fullscrean">
@@ -234,8 +222,8 @@ function videoPlayer() {
                     onClick={() => playState ? PauseVideo() : PlayVideo()}
                     onTimeUpdate={(e) => {
                         // debugger
-
-                        setTimestamp(e.currentTarget.currentTime); // TODO два обновлятора убивают друг друга рекурсия причина кала, причина стартеров типо.
+                        console.log("OnTImeUpdate", e.currentTarget.currentTime)
+                        setTimestampImidiate(e.currentTarget.currentTime); // TODO два обновлятора убивают друг друга рекурсия причина кала, причина стартеров типо.
                         // злая фигня пошло оно блин
 
                     }}></video>
