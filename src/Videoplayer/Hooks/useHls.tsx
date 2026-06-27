@@ -1,11 +1,13 @@
 import Hls from "hls.js"
 import { useEffect, useState } from "react";
 
+export default function useHls(videoContext: React.RefObject<HTMLVideoElement | null>, m8u3Url: string) {
+    const [hls, setHls] = useState<Hls | null>(null)
+    const [qualityLevel, setQualityLevel] = useState(-1)
+    const [qualityLevelList, setQualityLevelList] = useState<Array<string> | null>(null)
 
-export default function useHls(videoContext: React.RefObject<HTMLVideoElement>, m3u8Url: string) {
-    const [quality, setQuality] = useState(-1)
 
-    function Createhls(): Hls {
+    const Createhls = (m3u8Url: string): Hls => {
         if (m3u8Url === null || m3u8Url === undefined) {
             throw "no m8u3Url"
 
@@ -27,9 +29,14 @@ export default function useHls(videoContext: React.RefObject<HTMLVideoElement>, 
         });
 
         hls.on(Hls.Events.MANIFEST_PARSED, function (_event, data) {
-            const highestQualityIndex = data.levels.length - 1;
-            hls.currentLevel = highestQualityIndex;
+
+            const qualityLevelMANIFEST: string[] = data.levels.map<string>((e) => (e.width.toString())) // govno code
+
+            setQualityLevelList(qualityLevelMANIFEST)
+
+
         })
+
 
 
         return hls
@@ -38,11 +45,27 @@ export default function useHls(videoContext: React.RefObject<HTMLVideoElement>, 
 
 
 
+
+
     useEffect(() => {
-        const hls = Createhls()
+        const hls = Createhls(m8u3Url)
+        if (hls === null) {
+            return
+        }
+        setHls(hls)
+        console.log(qualityLevelList)
         console.log(hls.levels);
-        setQuality(hls.currentLevel)
+        return () => { hls.destroy() }
     }, [])
-    return {}
+
+    useEffect(() => {
+        if (hls === null) {
+            return
+        }
+
+        hls.currentLevel = qualityLevel;
+    }, [qualityLevel])
+
+    return { qualityLevel, setQualityLevel, qualityLevelList, }
 }
 

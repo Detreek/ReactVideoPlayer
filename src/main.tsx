@@ -6,6 +6,6 @@ import VideoPlayer from './Videoplayer/videoPlayer.tsx'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
 
-    <VideoPlayer />
+    <VideoPlayer m8u3Url='http://content.jwplatform.com/manifests/vM7nH0Kl.m3u8' />
   </StrictMode>,
 )

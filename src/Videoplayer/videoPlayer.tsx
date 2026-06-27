@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import Hls from "hls.js"
+// import Hls from "hls.js"
 import { PipWrapper, PipTrigger } from "@pip-it-up/react";
 import useVolume from "./Hooks/useVolume";
 import { getVideoData } from "./logic";
@@ -15,77 +15,21 @@ import VolumeRangeButton from "./componentsVideoPlayer/VolumeRangeButton";
 import useTimeline from "./Hooks/useTimeline";
 import useFullscreen from "./Hooks/useFullscreen";
 import useMouseMove from "./Hooks/useMouseMove";
-function videoPlayer() {
-    const videoContext = useRef<HTMLVideoElement>(null)
+import useHls from "./Hooks/useHls";
+import Hls from "hls.js";
+function videoPlayer(props: { m8u3Url: string }) {
+    const videoContext = useRef<HTMLVideoElement | null>(null)
     const fullscreenContext = useRef<HTMLDivElement | null>(null)
 
     const { duration, timestamp, setTimestamp, setMetadataLoaded, playState, setPlayState, setTimestampImidiate } = useTimeline(videoContext)
     const { volume, setVolume, muteState, setMuteState } = useVolume(videoContext)
     const { fullScreenState, setFullScreenState } = useFullscreen(fullscreenContext)
     const { isMoving, Movehandler, cleanup } = useMouseMove(1000)
+    const { qualityLevel, setQualityLevel, qualityLevelList } = useHls(videoContext, props.m8u3Url)
 
-    function Createhls(m3u8Url?: string): Hls {
-        if (m3u8Url === null || m3u8Url === undefined) {
-            throw "no m8u3Url"
-
-        }
-        if (videoContext.current === null) {
-            throw "no video element"
-
-        }
-        const config = {
-            // Replace limitRenditionByPlayerDimensions: true
-            capLevelToPlayerSize: true,
-        };
-        const hls = new Hls(config);
-        hls.attachMedia(videoContext.current)
-        hls.on(Hls.Events.MEDIA_ATTACHED, function () {
-
-            console.log('video and hls.js are now bound together !');
-        });
-
-        hls.on(Hls.Events.MANIFEST_PARSED, function (_event, data) {
-            const highestQualityIndex = data.levels.length - 1;
-            hls.currentLevel = highestQualityIndex;
-
-            console.log('manifest loaded, found ' + data.levels.length + ' quality level',);
-
-            if (videoContext.current === null) {
-                throw "no video element"
-
-            }
-        });
-
-        hls.loadSource(m3u8Url);
-
-
-        return hls
-    } // dont touch anything !!!!
-    async function LoadVideo(): Promise<Hls | null> {
-
-        const data = await getVideoData()
-
-        if (!videoContext.current) {
-            return (null)
-        }
-        if (data === undefined) {
-            return (null)
-        }
-        return Createhls(data.m8u3Url)
-
-    } // and this also dont touch
     // useEffect part
 
-    useEffect(() => {
-        let hls: Hls | null
-        (async () => hls = await LoadVideo())()
 
-
-
-        return () => hls?.destroy()
-
-
-    }, [])
 
     useEffect((() => {
 
@@ -125,8 +69,6 @@ function videoPlayer() {
         event.preventDefault()
         MuteVideo()
     }) // hotkeys mb add something else
-
-
 
 
     const FiveSecBefore = () => {
@@ -193,34 +135,40 @@ function videoPlayer() {
 
     return (
 
-        <div className={`relative`} ref={fullscreenContext} onMouseMove={Movehandler}
+        <div className={`relative max-w-4xl mx-auto bg-black rounded-xl overflow-hidden shadow-2xl`} ref={fullscreenContext} onMouseMove={Movehandler}
         >
-            <div className="video-not-fullscrean" >
-                <video ref={videoContext} className="w-full h-auto" onLoadedMetadata={() => {
-                    setMetadataLoaded(true)
 
-                }}
-                    onClick={() => playState ? PauseVideo() : PlayVideo()}
-                    onTimeUpdate={(e) => {
+            <video ref={videoContext} className="w-full h-auto" onLoadedMetadata={() => {
+                setMetadataLoaded(true)
+                console.log(qualityLevelList)
+            }}
+                onClick={() => playState ? PauseVideo() : PlayVideo()}
+                onTimeUpdate={(e) => {
 
-                        console.log("OnTImeUpdate", e.currentTarget.currentTime)
-                        setTimestampImidiate(e.currentTarget.currentTime);
+                    console.log("OnTImeUpdate", e.currentTarget.currentTime)
+                    setTimestampImidiate(e.currentTarget.currentTime);
 
 
-                    }}>
-                    <div className={clsx("absolute bottom-0 left-0 right-0", isMoving ? "  opacity-100" : " opacity-0")}>
-                        {/* "pop-up-window" */}
-                        <TimeLine videoDuration={duration} videoTime={timestamp} setVideoTime={setTimestamp}></TimeLine>
+                }} />
+            <div className={clsx("absolute inset-0 transition-opacity duration-300 pointer-events-none", isMoving ? "  opacity-100" : " opacity-0")}>
+                {/* "pop-up-window" */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+                <div className="mb-2 px-2">
+                    <TimeLine videoDuration={duration} videoTime={timestamp} setVideoTime={setTimestamp}></TimeLine></div>
+
+                <div className="flex items-center justify-between px-3 pb-2">
+                    <div className="flex items-center gap-2">
                         <VolumeRangeButton setVideoVolume={setVolume} videoVolume={volume}></VolumeRangeButton>
-                        <button onClick={() => playState ? PauseVideo() : PlayVideo()} className="w-5 h-5" ><img src={playState ? play : pause}></img></button>
-
-                        <button onClick={() => { setFullScreenState(V => !V) }}
-                            className="w-5 h-5"><img src={fullScreenState ? fullscreen : fullscreenOut}></img></button>
-
+                        <button onClick={() => playState ? PauseVideo() : PlayVideo()} className="w-6 h-6" ><img src={playState ? play : pause}></img></button>
                     </div>
-                </video>
-                <audio></audio>
+                    <button onClick={() => { setFullScreenState(V => !V) }}
+                        className="w-6 h-6"><img src={fullScreenState ? fullscreen : fullscreenOut}></img></button>
+
+                </div>
             </div>
+
+
+
         </div >
     )
 
