@@ -1,27 +1,18 @@
-import React from 'react'
-import { useState, useEffect } from 'react'
-export default function useVolume(videoContext: React.RefObject<HTMLVideoElement | null>) {
-    const [volume, setVolume] = useState(0.5)
-    const [muteState, setMuteState] = useState(false)
+import { useState, useEffect } from "react";
+import { VideoContextWrapper } from "../types/VideoContextWrapper";
+export default function useVolume(videoContext: VideoContextWrapper) {
+  const [volume, setVolume] = useState<number>(0.5);
+  const [muteState, setMuteState] = useState<boolean>(false);
 
-    useEffect(() => {
-        if (!videoContext.current) {
-            return
-        }
-        setVolume(videoContext.current.volume)
-        setMuteState(videoContext.current.muted)
-    }, [videoContext.current])
-    useEffect(() => {
-        if (!videoContext.current) {
-            return
-        }
-        videoContext.current.muted = muteState
-    }, [muteState])
-    useEffect(() => {
-        if (!videoContext.current) {
-            return
-        }
-        videoContext.current.volume = volume
-    }, [volume])
-    return { volume, setVolume, muteState, setMuteState }
+  useEffect(() => {
+    setVolume(videoContext.volume);
+    setMuteState(videoContext.muted);
+  }, [videoContext]);
+  useEffect(() => {
+    videoContext.setMute(muteState);
+  }, [muteState]);
+  useEffect(() => {
+    videoContext.setVolume(volume);
+  }, [volume]);
+  return { volume, setVolume, muteState, setMuteState };
 }

@@ -1,46 +1,59 @@
-import React from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
+import type { VideoContextWrapper } from "../types/VideoContextWrapper";
 
-export default function useTimeline(videoContext: React.RefObject<HTMLVideoElement | null>) {
+export default function useTimeline(videoContext: VideoContextWrapper) {
+  const [duration, setDuration] = useState<number>(0); // sec
+  const [timestamp, setTimestamp] = useState<number>(0); // sec
+  const [metadataLoaded, setMetadataLoaded] = useState<boolean>(false);
+  const [playState, setPlayState] = useState<boolean>(true); //isPlaying?????????????
+  const [realTimestamp, setRealTimestamp] = useState<number>(0);
+  const [bufferedTime, setBufferedTime] = useState<number | null>(null);
 
-    const [duration, setDuration] = useState<number>(0) // sec
-    const [timestamp, setTimestamp] = useState<number>(0) // sec
-    const [metadataLoaded, setMetadataLoaded] = useState<boolean>(false)
-    const [playState, setPlayState] = useState<boolean>(true) //isPlaying?????????????
-    const [realTimestamp, setRealTimestamp] = useState<number>(0)
-    useEffect(() => {
-        // debugger
-        if (!videoContext.current) {
+  useEffect(() => {
+    // debugger
+    const updateBufferedTime = () => {
+      const buffered = videoContext.buffered;
+      let total = 0;
 
-            return
+      for (let i = 0; i < buffered.length; i++) {
+        total += buffered.end(i) - buffered.start(i);
+      }
 
-        }
-        setPlayState(!videoContext.current.paused)
-        setDuration(videoContext.current.duration)
-        setTimestamp(videoContext.current.currentTime)
-    }, [videoContext.current, metadataLoaded,])
-    useEffect(() => {
+      setBufferedTime(total);
+      return total;
+    };
 
-        if (!playState) {
-            videoContext.current?.pause()
-            return
-        }
-        videoContext.current?.play()
-        return
-    }, [playState])
-    useEffect(() => {
-
-        if (!videoContext.current || videoContext.current.currentTime === timestamp) {
-            return
-        }
-        videoContext.current.currentTime = timestamp
-        setRealTimestamp(timestamp)
-        console.log("UseEffect", timestamp, "Timestamp")
-        return
-    }, [timestamp])
-
-    const setTimestampImidiate = (timestamp: number) => {
-        return setRealTimestamp(timestamp)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPlayState(!videoContext.pause);
+    setDuration(videoContext.duration);
+    setTimestamp(videoContext.time);
+    updateBufferedTime();
+  }, [metadataLoaded, videoContext, bufferedTime]);
+  useEffect(() => {
+    videoContext.setPaused(playState);
+  }, [playState, videoContext]);
+  useEffect(() => {
+    if (videoContext.time === timestamp) {
+      return;
     }
-    return { duration, timestamp: realTimestamp, setTimestamp, setMetadataLoaded, playState, setPlayState, setTimestampImidiate }
+    videoContext.setTime(timestamp);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setRealTimestamp(timestamp);
+    console.log("UseEffect", timestamp, "Timestamp");
+    return;
+  }, [timestamp, videoContext]);
+
+  const setTimestampImidiate = (timestamp: number) => {
+    return setRealTimestamp(timestamp);
+  };
+
+  return {
+    duration,
+    timestamp: realTimestamp,
+    setTimestamp,
+    setMetadataLoaded,
+    playState,
+    setPlayState,
+    setTimestampImidiate,
+  };
 }
