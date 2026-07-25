@@ -1,73 +1,73 @@
-# React + TypeScript + Vite
+# React Video Player
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## О проекте
 
-Currently, two official plugins are available:
+React Video Player — это современный веб-плеер, построенный на React и TypeScript с поддержкой HLS-стриминга. Проект разработан с нуля с акцентом на производительность, удобство использования и адаптивный дизайн.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Ключевые особенности
 
-## React Compiler
+### HLS-стриминг
+Плеер использует библиотеку hls.js для воспроизведения видео в формате HLS, что обеспечивает поддержку адаптивного битрейта и плавную смену качества во время просмотра. Это позволяет зрителям с разной скоростью интернета получать оптимальное качество видео без буферизации.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Адаптивное управление качеством
+Пользователь может вручную выбирать качество видео (от 144p до 4K) или довериться автоматическому режиму, который подстраивается под текущие условия сети. Индикатор текущего качества отображается прямо в интерфейсе, а процесс смены качества сопровождается визуальной обратной связью.
 
-## Expanding the ESLint configuration
+### Интуитивный интерфейс
+Управление плеером интуитивно понятно и напоминает популярные видеосервисы:
+- Прогресс-бар с отображением загруженного буфера
+- Регулятор громкости с поддержкой Mute
+- Полноэкранный режим с нативной поддержкой браузеров
+- Всплывающие элементы управления, которые автоматически скрываются при бездействии
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Горячие клавиши
+Для продвинутых пользователей реализована полная поддержка клавиатурных сокращений:
+- Пробел или K — пауза/воспроизведение
+- Стрелки влево/вправо — перемотка на 5 секунд
+- Стрелки вверх/вниз — изменение громкости
+- M — выключение звука
+- F — полноэкранный режим
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Технологический стек
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Фронтенд
+- React 19 — для построения пользовательского интерфейса
+- TypeScript — для типобезопасности и лучшей поддержки в IDE
+- Tailwind CSS — для быстрой стилизации и адаптивного дизайна
+- Vite — для быстрой сборки и разработки
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Видео
+- hls.js — для HLS-стриминга и адаптивного битрейта
+- react-hotkeys-hook — для управления горячими клавишами
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Архитектура
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Проект построен на компонентном подходе с четким разделением ответственности:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Компоненты
+- **VideoPlayer** — основной компонент, управляющий состоянием и логикой плеера
+- **ControlsOverlay** — отображение элементов управления с автоматическим скрытием
+- **Timeline** — прогресс-бар с отображением буфера и ползунком для перемотки
+- **VideoSettings** — меню выбора качества видео
+- **FullScreenButton** — кнопка полноэкранного режима
+
+### Хуки
+- **useHls** — управление HLS-потоком, загрузкой и сменой качества
+- **useTimeline** — отслеживание времени воспроизведения и буферизации
+- **useVolume** — управление громкостью и состоянием звука
+- **useFullscreen** — управление полноэкранным режимом
+- **useControls** — автоматическое скрытие интерфейса при бездействии
+
+## Преимущества
+
+### Производительность
+Благодаря Vite и оптимизированной сборке, плеер загружается мгновенно и работает плавно даже на устройствах с ограниченными ресурсами.
+
+### Расширяемость
+Модульная архитектура позволяет легко добавлять новые функции: субтитры, плейлисты, аналитику просмотров и многое другое.
+
+### Опыт пользователя
+Все элементы управления отзывчивы и дают мгновенную обратную связь. Анимации плавные и не мешают просмотру.
+
+## Заключение
+
+React Video Player — это не просто плеер, а продуманное решение для воспроизведения видео в современных веб-приложениях. Он сочетает в себе все необходимые функции для комфортного просмотра, высокую производительность и приятный внешний вид. Проект демонстрирует современный подход к разработке React-приложений с использованием TypeScript и Tailwind CSS.
